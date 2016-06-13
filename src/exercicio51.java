@@ -26,26 +26,13 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/*PONTOS A VERIFICAR
- * 
- * ERRO AO EDITAR TELEFONES ******* PRIORIDADE
- * TECLAS DE ATALHO
- * VERIFICAR EXCLUIR REGISTROS
- * SCROLL
- * BUGS NA VALIDAÇÃO DE CPF E RG
- * 
- * MUDAR OS TEXTOS DA TELA DE AJUDA
- * 
- * PROCEDIMENTOS DE BUSCA NA TELA DE CONSULTA***FEITOS VERIFICAR FUNCIONALIDADE
- * VERIFICAR A POSSIBILIDADE DE EDITAR UM REGISTRO NA TELA DE PESQUISA
- * 
- * */
 public class exercicio51 {
 	static JFrame menuInicial;
 	static JFrame telaCadastro;
@@ -80,8 +67,6 @@ public class exercicio51 {
 	static JButton botaoProximo;
 	static JButton botaoAnterior;
 	static JButton botaoOkEntendi;
-	static JButton botaoEditarTelefone;/* IMPLEMENTAR ESSES BOTÕES */
-	static JButton botaoExcluirTelefone;
 
 	static JPanel painelPrincipal;
 	static JPanel painelCadastro;
@@ -100,6 +85,10 @@ public class exercicio51 {
 	static JTable telefones;
 	static JTable telefonesPesquisa;
 
+	static JScrollPane tabelaPrincipal;
+	static JScrollPane tabelaPesquisa;
+	static JScrollPane tabelaPesquisaTelefones;
+
 	static JPopupMenu menuOpcoes;
 	static JPopupMenu menuTelefones;
 
@@ -114,7 +103,6 @@ public class exercicio51 {
 
 	static JMenuItem editar;
 	static JMenuItem excluir;
-	static JMenuItem adicionarTelefone;
 	static JMenuItem editarTelefone;
 	static JMenuItem excluirTelefone;
 
@@ -131,6 +119,8 @@ public class exercicio51 {
 	static int tamanhoTel = 6;
 	static int qtdeTel = 0;
 	static int indiceProximo = 1;
+	static int pos;
+	static int registrosExcluidos = 0;
 	static boolean editando = false;
 	static boolean excluindo = false;
 	static boolean adicionandoTelefone = false;
@@ -142,11 +132,14 @@ public class exercicio51 {
 	static String[] campos = new String[] { "Código", "Nome", "e-mail", "CPF", "RG" };
 	static String[] colunaTelefones = new String[] { "Código", "Telefone" };
 	static DefaultTableModel modelo;
+	static DefaultTableModel modeloPesq;
 	static DefaultTableModel tel;
+	static DefaultTableModel telPesq;
 	static String[][] lista = new String[tamanhoTotal][camposLista];
 	static String[][] telefonesCliente = new String[tamanhoTotal][tamanhoTel];
 	static String[] posicoes = new String[tamanhoTotal];
 	static String[] dados = new String[7];
+	static String[] telefonesCadastrados;
 
 	static JLabel titulo;
 	static JLabel msg;
@@ -183,7 +176,7 @@ public class exercicio51 {
 	}
 
 	static int verificarPosicaoLivre() {
-		int pos = 0;
+		int pos = 100;
 		for (int a = 0; a < tamanhoTotal; a++) {
 			String conteudo = posicoes[a];
 			if (conteudo.equals("livre")) {
@@ -291,17 +284,6 @@ public class exercicio51 {
 			}
 		}
 	}
-
-	static void chamarAcoesApresentacao() {
-		botaoComecar.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				apresentacao.dispose();
-				criarMenu();
-			}
-		});
-	}
 	// funcoes que criam e exibem o menu principal e seus componentes
 
 	static void criarMenu() {
@@ -326,7 +308,7 @@ public class exercicio51 {
 		botaoAdicionar.setVisible(true);
 		botaoAdicionar.setSize(100, 20);
 		botaoAdicionar.setLocation(17, 500);
-		habilitarBotao(botaoAdicionar, 100);
+		habilitarBotao(botaoAdicionar, 101);
 
 		botaoEditar = new JButton("Editar");
 		botaoEditar.setLayout(null);
@@ -340,7 +322,7 @@ public class exercicio51 {
 		botaoConsultar.setVisible(true);
 		botaoConsultar.setSize(100, 20);
 		botaoConsultar.setLocation(251, 500);
-		// habilitarBotao(botaoConsultar,0);
+		habilitarBotao(botaoConsultar, 0);
 
 		botaoExcluir = new JButton("Excluir");
 		botaoExcluir.setLayout(null);
@@ -355,23 +337,30 @@ public class exercicio51 {
 		botaoSair.setSize(100, 20);
 		botaoSair.setLocation(485, 500);
 
-		modelo = new DefaultTableModel(campos, 0);
-		modelo.addRow(campos);
+		modelo = new DefaultTableModel(campos, 0) {
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
 
 		editar = new JMenuItem("Editar");
 		excluir = new JMenuItem("Excluir");
-		adicionarTelefone = new JMenuItem("Adicionar um Telefone");
 
 		menuOpcoes = new JPopupMenu();
 		menuOpcoes.add(editar);
 		menuOpcoes.add(excluir);
-		menuOpcoes.add(adicionarTelefone);
 
 		tabela = new JTable();
 		tabela.setLayout(null);
 		tabela.setBounds(10, 70, 575, 400);
 		tabela.setVisible(true);
 		tabela.setModel(modelo);
+
+		tabelaPrincipal = new JScrollPane(tabela);
+		tabelaPrincipal.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		tabelaPrincipal.setBounds(10, 70, 575, 400);
+		tabelaPrincipal.setVisible(true);
+		tabelaPrincipal.setViewportView(tabela);
 
 		titulo = new JLabel("Clientes Cadastrados");
 		titulo.setBounds(10, 30, 250, 30);
@@ -392,17 +381,17 @@ public class exercicio51 {
 		menuInicial.getContentPane().setBackground(Color.BLACK);
 		menuInicial.setVisible(true);
 		menuInicial.add(painelPrincipal);
+		painelPrincipal.add(tabelaPrincipal);
 		painelPrincipal.add(botaoAdicionar);
 		painelPrincipal.add(botaoEditar);
 		painelPrincipal.add(botaoConsultar);
 		painelPrincipal.add(botaoExcluir);
 		painelPrincipal.add(botaoSair);
-		painelPrincipal.add(tabela);
 		tabela.add(menuOpcoes);
 		painelPrincipal.add(titulo);
 		painelPrincipal.add(msg);
 		painelPrincipal.add(botaoAjuda);
-		adicionardadosJTable();
+		adicionardadosJTable(0);
 		chamarAcoesMenu();
 		criarTelaCadastro();
 		criarTelaConsulta();
@@ -412,14 +401,19 @@ public class exercicio51 {
 	}
 
 	static void atualizarTelaInicial() {
+		int numClientes = verificarPosicaoLivre();
 		editando = false;
 		excluindo = false;
 		adicionandoTelefone = false;
 		atualizarTelefone = false;
+		pos = 0;
 		cdTelefone = 1;
 		cdPesq = "";
 		menuInicial.dispose();
 		criarMenu();
+		if(numClientes==100){
+			JOptionPane.showMessageDialog(null, "Limite de cadastro de clientes atingido!\n Não é possível cadastrar novos clientes.");
+		}
 	}
 
 	// funcoes que criam e exibem a tela de cadastro e seus componentes
@@ -447,6 +441,7 @@ public class exercicio51 {
 		botaoSalvar.setVisible(true);
 		botaoSalvar.setSize(100, 20);
 		botaoSalvar.setLocation(67, 500);
+		botaoSalvar.setEnabled(false);
 
 		botaoCancelar = new JButton("Cancelar");
 		botaoCancelar.setLayout(null);
@@ -549,7 +544,7 @@ public class exercicio51 {
 
 	static void criarTelaConsulta() {
 		telaConsulta = new JFrame("Consultar");
-		telaConsulta.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		telaConsulta.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		iniciarComponentesConsulta();
 	}
 
@@ -568,6 +563,7 @@ public class exercicio51 {
 		rbTodos.setLayout(null);
 		rbTodos.setSelected(false);
 		rbTodos.setBounds(10, 25, 100, 20);
+		rbTodos.setSelected(true);
 		rbTodos.setVisible(true);
 
 		rbCodigo = new JRadioButton("Código");
@@ -585,6 +581,8 @@ public class exercicio51 {
 		campoPesquisar = new JTextField();
 		campoPesquisar.setLayout(null);
 		campoPesquisar.setBounds(10, 60, 570, 20);
+		campoPesquisar.setEnabled(false);
+		campoPesquisar.setBackground(Color.lightGray);
 		campoPesquisar.setVisible(true);
 
 		botaoPesquisar = new JButton("Pesquisar");
@@ -599,20 +597,44 @@ public class exercicio51 {
 		botaoSairPesquisa.setSize(100, 20);
 		botaoSairPesquisa.setLocation(480, 90);
 
+		modeloPesq = new DefaultTableModel(campos, 0) {
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+
 		resultadoPesquisa = new JTable();
 		resultadoPesquisa.setLayout(null);
 		resultadoPesquisa.setBounds(10, 120, 575, 300);
 		resultadoPesquisa.setVisible(true);
+
+		tabelaPesquisa = new JScrollPane(resultadoPesquisa);
+		tabelaPesquisa.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		tabelaPesquisa.setBounds(10, 120, 575, 300);
+		tabelaPesquisa.setViewportView(resultadoPesquisa);
 
 		lbPesquisaTelefones = new JLabel("Telefones do cliente");
 		lbPesquisaTelefones.setBounds(10, 430, 300, 30);
 		lbPesquisaTelefones.setFont(new Font("Arial", Font.BOLD + Font.ITALIC, 12));
 		lbPesquisaTelefones.setVisible(true);
 
+		telPesq = new DefaultTableModel(colunaTelefones, 0) {
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+		telPesq.addRow(colunaTelefones);
+
 		telefonesPesquisa = new JTable();
 		telefonesPesquisa.setLayout(null);
 		telefonesPesquisa.setBounds(10, 460, 575, 150);
 		telefonesPesquisa.setVisible(true);
+
+		tabelaPesquisaTelefones = new JScrollPane(telefonesPesquisa);
+		tabelaPesquisaTelefones.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		tabelaPesquisaTelefones.setBounds(10, 460, 575, 150);
+		tabelaPesquisaTelefones.setVisible(true);
+		tabelaPesquisaTelefones.setViewportView(telefonesPesquisa);
 
 		mostrarConsulta();
 	}
@@ -626,11 +648,11 @@ public class exercicio51 {
 		painelconsulta.add(rbNome);
 		painelconsulta.add(campoPesquisar);
 		painelconsulta.add(botaoPesquisar);
-		painelconsulta.add(resultadoPesquisa);
 		resultadoPesquisa.add(menuOpcoes);
 		painelconsulta.add(botaoSairPesquisa);
-		painelconsulta.add(telefonesPesquisa);
+		painelconsulta.add(tabelaPesquisaTelefones);
 		painelconsulta.add(lbPesquisaTelefones);
+		painelconsulta.add(tabelaPesquisa);
 		telaConsulta.setVisible(false);
 		chamarAcoesConsulta();
 	}
@@ -685,7 +707,7 @@ public class exercicio51 {
 
 	static void criarTelaTelefone() {
 		telaTelefones = new JFrame("Cadastre Telefones para o cliente");
-		telaTelefones.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		telaTelefones.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		iniciarComponentesTelefone();
 	}
 
@@ -728,7 +750,11 @@ public class exercicio51 {
 		botaoCancelarTelefone.setSize(100, 20);
 		botaoCancelarTelefone.setLocation(180, 330);
 
-		tel = new DefaultTableModel(colunaTelefones, 0);
+		tel = new DefaultTableModel(colunaTelefones, 0) {
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
 		tel.addRow(colunaTelefones);
 
 		telefones = new JTable();
@@ -764,9 +790,9 @@ public class exercicio51 {
 		indiceProximo = 1;
 
 		telaAjuda = new JFrame("Tela de Ajuda");
-		telaAjuda.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		telaAjuda.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		telaAjuda.setVisible(true);
-		travarTela(telaAjuda, 800, 800);
+		travarTela(telaAjuda, 800, 700);
 
 		painelAjuda = new JPanel();
 		painelAjuda.setLayout(null);
@@ -784,7 +810,7 @@ public class exercicio51 {
 		botaoAnterior.setSize(100, 20);
 		botaoAnterior.setLocation(10, 630);
 
-		botaoOkEntendi = new JButton("Ok, Entendi.");
+		botaoOkEntendi = new JButton("Ok, Entendi e Sair.");
 		botaoOkEntendi.setLayout(null);
 		botaoOkEntendi.setVisible(true);
 		botaoOkEntendi.setSize(150, 20);
@@ -830,82 +856,62 @@ public class exercicio51 {
 		} else if (indiceProximo == 2) {// editar
 			botaoAnterior.setEnabled(true);
 			ajuda.setText("<font color=" + "blue>" + "<font size =" + "10>" + "<b>Cadastro de clientes</b></font>"
-					+ "<p><p><font color =" + "black" + "><cont size =" + "9>" + "<b>Adicionar Clientes:</b></font>"
-					+ "<p>" + "<font color =" + "black"
-					+ "><b>2.0 - Para adicionar clientes será necessário seguir os passos abaixo:<br><font color ="
-					+ "red" + "><br>" + "  a - Clique em no botão [Adicionar].<br>"
-					+ "  b - Preencha Todos os campos um a um.<br>" + "  <br></font>"
-					+ "  1.1 - Adicionar telefones:<br><br>"
-					+ "  O cadastro de telefones é opcionalPara adicionar telefones será necessário preencher todos os campos do cadastro,"
-					+ "  só assim o "
-					+ "  botão adicionar telefone ficará habilitado. Após preencher todos os campos do cadastro de clientes, "
-					+ "  será possível adicionar até 5(cinco) telefones ao cliente, para isso basta seguir os passos abaixo:<br>"
-					+ "    <font color =" + "red" + "><br>a - Clique no botão [Adicionar Telefone].<br>"
-					+ "    b - Preencha o campo Telefone apenas com números.<br>"
-					+ "    c - Cliique no botão [Adicionar].<br>" + "    d - O Telefone aparecerá na tabela abaixo.<br>"
-					+ "    e - Após adicionar todos os telefones clique no botão [Salvar] para confirmar o cadastro dos telefones"
-					+ "        ou no botão [Cancelar] para não salvar os telefones.<br><br></font>"
-					+ "    Após preencher todos os campos  da tela de cadastro clique no botão [Salvar] para confirmar o cadastro do"
-					+ "    cliente ou no<br>" + "       botão [Cancelar] para não salvar o registro.");
+					+ "<br><br><font color =" + "black" + "><cont size =" + "9>" + "<b>Editar Clientes:</b><br></font>"
+					+ "<br>" + "<font color =" + "black"
+					+ "><b>2.0 - Existem dois modos de editar um registro: pesquisar por código, edição direta<br><font color ="
+					+ "blue" + ">" + " <br>1º modo: Pesquisando pelo código:</font> <font color =" + "red" + "><br><br>"
+					+ "  a - Clique em no botão [Editar].<br>"
+					+ "  b - Informe o código do cliente e clique em [OK].<br>"
+					+ "  c - A tela de cadastro será carregada com os dados do cliente pesquisado."
+					+ "  d - Faça as edições necessárias nos dados e telefones do cliente e clique em [Atualizar]."
+					+ "  <br><br></font>" + "  <font color =" + "blue" + ">2° modo: Edição direta<br><br></font>"
+					+ "  Para editar um registro de forma direta, basta selecionar o registro do cliente na tabela inicial, ou na tabela"
+					+ "  da tela de consulta e seguir os passos abaixo:" + "  <font color =" + "red" + "><br><br>"
+					+ "  a - Clique sobre o registro para selecioná-lo e clique com o botão direito do mouse.<br>"
+					+ "  b - No menu que aparecerá, clique em [Editar].<br>"
+					+ "  c - A tela de cadastra será carregado com os dados do cliente que foi selecionado na tabela.<br>"
+					+ "  d - Faça as edições necessárias(incluindo dados do cliente e telefones) e clique em [Atualizar]."
+					+ "  <br></font>");
 		} else if (indiceProximo == 3) {// excluir
 			ajuda.setText("<font color=" + "blue>" + "<font size =" + "10>" + "<b>Cadastro de clientes</b></font>"
-					+ "<p><p><font color =" + "black" + "><cont size =" + "9>" + "<b>Adicionar Clientes:</b></font>"
-					+ "<p>" + "<font color =" + "black"
-					+ "><b>3.0 - Para adicionar clientes será necessário seguir os passos abaixo:<br><font color ="
-					+ "red" + "><br>" + "  a - Clique em no botão [Adicionar].<br>"
-					+ "  b - Preencha Todos os campos um a um.<br>" + "  <br></font>"
-					+ "  1.1 - Adicionar telefones:<br><br>"
-					+ "  O cadastro de telefones é opcionalPara adicionar telefones será necessário preencher todos os campos do cadastro,"
-					+ "  só assim o "
-					+ "  botão adicionar telefone ficará habilitado. Após preencher todos os campos do cadastro de clientes, "
-					+ "  será possível adicionar até 5(cinco) telefones ao cliente, para isso basta seguir os passos abaixo:<br>"
-					+ "    <font color =" + "red" + "><br>a - Clique no botão [Adicionar Telefone].<br>"
-					+ "    b - Preencha o campo Telefone apenas com números.<br>"
-					+ "    c - Cliique no botão [Adicionar].<br>" + "    d - O Telefone aparecerá na tabela abaixo.<br>"
-					+ "    e - Após adicionar todos os telefones clique no botão [Salvar] para confirmar o cadastro dos telefones"
-					+ "        ou no botão [Cancelar] para não salvar os telefones.<br><br></font>"
-					+ "    Após preencher todos os campos  da tela de cadastro clique no botão [Salvar] para confirmar o cadastro do"
-					+ "    cliente ou no<br>" + "       botão [Cancelar] para não salvar o registro.");
+					+ "<br><br><font color =" + "black" + "><cont size =" + "9>" + "<b>Excluir Clientes:</b></font>"
+					+ "<br><br>" + "<font color =" + "black"
+					+ "><b>3.0 - Existem dois modos de excluir um registro: pesquisar por código, exclusão direta.<br><font color ="
+					+ "blue" + ">" + " <br>1º modo: Pesquisando pelo código:</font> <font color =" + "red" + "><br><br>"
+					+ "  a - Clique em no botão [Excluir].<br>"
+					+ "  b - Informe o código do cliente e clique em [OK].<br>"
+					+ "  c - A tela de cadastro será carregada com os dados do cliente pesquisado.<br>"
+					+ "  d - Clique em [Excluir Registro] para apagar o registro do cliente." + "  <br><br></font>"
+					+ "  <font color =" + "blue" + ">2° modo: Eclusão direta<br><br></font>"
+					+ "  Para excluir um registro de forma direta, basta selecionar o registro do cliente na tabela inicial, ou na tabela"
+					+ "  da tela de consulta e seguir os passos abaixo:" + "  <font color =" + "red" + "><br><br>"
+					+ "  a - Clique sobre o registro para selecioná-lo e clique com o botão direito do mouse.<br>"
+					+ "  b - No menu que aparecerá, clique em [Excluir].<br>"
+					+ "  c - A tela de cadastro será carregada com os dados do cliente que foi selecionado na tabela.<br>"
+					+ "  d - Clique em [Excluir Registro] para apagar o registro do cliente." + "  <br></font>");
 
-		} else if (indiceProximo == 4) {// editar telefones
+		} else if (indiceProximo == 4) {// editar telefone
+			botaoProximo.setEnabled(true);
 			ajuda.setText("<font color=" + "blue>" + "<font size =" + "10>" + "<b>Cadastro de clientes</b></font>"
-					+ "<p><p><font color =" + "black" + "><cont size =" + "9>" + "<b>Adicionar Clientes:</b></font>"
+					+ "<p><p><font color =" + "black" + "><cont size =" + "9>" + "<b>Editar Telefone:</b></font>"
 					+ "<p>" + "<font color =" + "black"
-					+ "><b>4.0 - Para adicionar clientes será necessário seguir os passos abaixo:<br><font color ="
-					+ "red" + "><br>" + "  a - Clique em no botão [Adicionar].<br>"
-					+ "  b - Preencha Todos os campos um a um.<br>" + "  <br></font>"
-					+ "  1.1 - Adicionar telefones:<br><br>"
-					+ "  O cadastro de telefones é opcionalPara adicionar telefones será necessário preencher todos os campos do cadastro,"
-					+ "  só assim o "
-					+ "  botão adicionar telefone ficará habilitado. Após preencher todos os campos do cadastro de clientes, "
-					+ "  será possível adicionar até 5(cinco) telefones ao cliente, para isso basta seguir os passos abaixo:<br>"
-					+ "    <font color =" + "red" + "><br>a - Clique no botão [Adicionar Telefone].<br>"
-					+ "    b - Preencha o campo Telefone apenas com números.<br>"
-					+ "    c - Cliique no botão [Adicionar].<br>" + "    d - O Telefone aparecerá na tabela abaixo.<br>"
-					+ "    e - Após adicionar todos os telefones clique no botão [Salvar] para confirmar o cadastro dos telefones"
-					+ "        ou no botão [Cancelar] para não salvar os telefones.<br><br></font>"
-					+ "    Após preencher todos os campos  da tela de cadastro clique no botão [Salvar] para confirmar o cadastro do"
-					+ "    cliente ou no<br>" + "       botão [Cancelar] para não salvar o registro.");
-		} else if (indiceProximo == 5) {// adicionar telefone
+					+ "><b>4.0 - Para Editar um telefone, será necessário seguir os passo a baixo:<br><font color ="
+					+ "red" + "><br>"
+					+ "  a - Na tela de cadastro de telefones clique sobre algum telefone cadastrado para selecioná-lo;<br>"
+					+ "  b - Clique com o botão direito do mouse:<br>" + "  c - Clique em [Editar];<br>"
+					+ "  d - Na próxima tela informe o novo número de telefone e clique em [Ok];"
+					+ "  e - Seu telefone aparecerá na lista com os demais." + "  <br></font>");
+		} else if (indiceProximo == 5) {// excluir telefones
 			botaoProximo.setEnabled(false);
 			ajuda.setText("<font color=" + "blue>" + "<font size =" + "10>" + "<b>Cadastro de clientes</b></font>"
-					+ "<p><p><font color =" + "black" + "><cont size =" + "9>" + "<b>Adicionar Clientes:</b></font>"
+					+ "<p><p><font color =" + "black" + "><cont size =" + "9>" + "<b>Excluir Telefones:</b></font>"
 					+ "<p>" + "<font color =" + "black"
-					+ "><b>5.0 - Para adicionar clientes será necessário seguir os passos abaixo:<br><font color ="
-					+ "red" + "><br>" + "  a - Clique em no botão [Adicionar].<br>"
-					+ "  b - Preencha Todos os campos um a um.<br>" + "  <br></font>"
-					+ "  1.1 - Adicionar telefones:<br><br>"
-					+ "  O cadastro de telefones é opcionalPara adicionar telefones será necessário preencher todos os campos do cadastro,"
-					+ "  só assim o "
-					+ "  botão adicionar telefone ficará habilitado. Após preencher todos os campos do cadastro de clientes, "
-					+ "  será possível adicionar até 5(cinco) telefones ao cliente, para isso basta seguir os passos abaixo:<br>"
-					+ "    <font color =" + "red" + "><br>a - Clique no botão [Adicionar Telefone].<br>"
-					+ "    b - Preencha o campo Telefone apenas com números.<br>"
-					+ "    c - Cliique no botão [Adicionar].<br>" + "    d - O Telefone aparecerá na tabela abaixo.<br>"
-					+ "    e - Após adicionar todos os telefones clique no botão [Salvar] para confirmar o cadastro dos telefones"
-					+ "        ou no botão [Cancelar] para não salvar os telefones.<br><br></font>"
-					+ "    Após preencher todos os campos  da tela de cadastro clique no botão [Salvar] para confirmar o cadastro do"
-					+ "    cliente ou no<br>" + "       botão [Cancelar] para não salvar o registro.");
+					+ "><b>5.0 - Para Excluir um telefone, será necessário seguir os passo a baixo:<br><font color ="
+					+ "red" + "><br>"
+					+ "  a - Na tela de cadastro de telefones clique sobre algum telefone cadastrado para selecioná-lo;<br>"
+					+ "  b - Clique com o botão direito do mouse:<br>" + "  c - Clique em [Excluir];<br>"
+					+ "  d - Seu telefone desaparecerá da lista." + "  <br></font>");
+
 		}
 	}
 
@@ -944,6 +950,62 @@ public class exercicio51 {
 		} else {
 			b.setEnabled(true);
 		}
+	}
+
+	static void chamarAcoesApresentacao() {
+
+		apresentacao.addWindowListener(new WindowListener() {
+
+			@Override
+			public void windowOpened(WindowEvent e) {
+				/* Método sem implementação necessária */
+			}
+
+			@Override
+			public void windowIconified(WindowEvent e) {
+				/* Método sem implementação necessária */
+			}
+
+			@Override
+			public void windowDeiconified(WindowEvent e) {
+				/* Método sem implementação necessária */
+
+			}
+
+			@Override
+			public void windowDeactivated(WindowEvent e) {
+				/* Método sem implementação necessária */
+
+			}
+
+			@Override
+			public void windowClosing(WindowEvent e) {
+				/* Método sem implementação necessária */
+
+			}
+
+			@Override
+			public void windowClosed(WindowEvent e) {
+				/* Método sem implementação necessária */
+
+			}
+
+			@Override
+			public void windowActivated(WindowEvent e) {
+				/* Método sem implementação necessária */
+
+			}
+		});
+		botaoComecar.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				apresentacao.dispose();
+				JOptionPane.showMessageDialog(null,
+						"Novo aqui? Primeiro acesso? \n Recomendamos a você, ler a nossa sessão de ajuda, \n é rápido e irá te ajudar a operar o sistema.");
+				criarMenu();
+			}
+		});
 	}
 
 	static void chamarAcoesMenu() {
@@ -1023,6 +1085,7 @@ public class exercicio51 {
 					campoCodigo.setText(String.valueOf(verificarPosicaoLivre() + 1));
 					i = verificarPosicaoLivre();
 					j = 0;
+					pos = i;
 					telaCadastro.setVisible(true);
 					menuInicial.setVisible(false);
 				}
@@ -1086,86 +1149,57 @@ public class exercicio51 {
 
 	/* ações do popupmenu */
 	static void acoesMenuOpcoes() {
-		/*
-		 * IMPLANTAR FUNÇÃO EDITAR
-		 ****************************************************************/
 		editar.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				int linha = tabela.getSelectedRow();
-				if (linha > 0) {
-					editando = true;
-					telaCadastro.setVisible(true);
-					cdPesq = (String) tabela.getValueAt(linha, 0);
-					pesquisarRegistro(cdPesq);
-					campoCodigo.setText(dados[0]);
-					campoNome.setText(dados[1]);
-					campoEmail.setText(dados[2]);
-					campoCpf.setText(dados[3]);
-					campoRg.setText(dados[4]);
-					k = Integer.parseInt((String) tabela.getValueAt(linha, 0)) - 1;
-					l = 0;
-					botaoSalvar.setVisible(false);
-					botaoSalvar.setEnabled(false);
-					botaoSalvarEdicao.setEnabled(true);
-					botaoSalvarEdicao.setVisible(true);
-					painelCadastro.add(botaoSalvarEdicao);
-				} else {
-					JOptionPane.showMessageDialog(null, "Linha selecionada inválida.");
-				}
+				editando = true;
+				telaCadastro.setVisible(true);
+				cdPesq = (String) tabela.getValueAt(linha, 0);
+				pesquisarRegistro(cdPesq);
+				campoCodigo.setText(dados[0]);
+				campoNome.setText(dados[1]);
+				campoEmail.setText(dados[2]);
+				campoCpf.setText(dados[3]);
+				campoRg.setText(dados[4]);
+				k = Integer.parseInt((String) tabela.getValueAt(linha, 0)) - 1;
+				l = 0;
+				pos = k;
+				botaoSalvar.setVisible(false);
+				botaoSalvar.setEnabled(false);
+				botaoSalvarEdicao.setEnabled(true);
+				botaoSalvarEdicao.setVisible(true);
+				painelCadastro.add(botaoSalvarEdicao);
 			}
 		});
-		/*
-		 * IMPLANTAR EXCLIUR
-		 **********************************************************************/
+
 		excluir.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				int linha = tabela.getSelectedRow();
-				if (linha > 0) {
-					excluindo = true;
-					telaCadastro.setVisible(true);
-					campoCodigo.setText((String) tabela.getValueAt(linha, 0));
-					campoNome.setText((String) tabela.getValueAt(linha, 1));
-					campoEmail.setText((String) tabela.getValueAt(linha, 2));
-					campoCpf.setText((String) tabela.getValueAt(linha, 3));
-					campoRg.setText((String) tabela.getValueAt(linha, 4));
-					k = Integer.parseInt((String) tabela.getValueAt(linha, 0)) - 1;
-					l = 0;
-					botaoSalvar.setVisible(false);
-					botaoSalvar.setEnabled(false);
-					botaoExcluirRegistro.setEnabled(true);
-					botaoExcluirRegistro.setVisible(true);
-					painelCadastro.add(botaoExcluirRegistro);
-				} else {
-					JOptionPane.showMessageDialog(null, "Linha selecionada inválida.");
-				}
+
+				excluindo = true;
+				telaCadastro.setVisible(true);
+				campoCodigo.setText((String) tabela.getValueAt(linha, 0));
+				campoNome.setText((String) tabela.getValueAt(linha, 1));
+				campoEmail.setText((String) tabela.getValueAt(linha, 2));
+				campoCpf.setText((String) tabela.getValueAt(linha, 3));
+				campoRg.setText((String) tabela.getValueAt(linha, 4));
+				k = Integer.parseInt((String) tabela.getValueAt(linha, 0)) - 1;
+				l = 0;
+				botaoSalvar.setVisible(false);
+				botaoSalvar.setEnabled(false);
+				botaoExcluirRegistro.setEnabled(true);
+				botaoExcluirRegistro.setVisible(true);
+				painelCadastro.add(botaoExcluirRegistro);
+
 			}
 		});
 
-		adicionarTelefone.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				int linha = tabela.getSelectedRow();
-				if (linha > 0) {
-					editando = true;
-					String cdCliente = ((String) tabela.getValueAt(linha, 0));
-					String nomeCliente = (String) tabela.getValueAt(linha, 1);
-					cdPesq = cdCliente;
-					adicionandoTelefone = true;
-
-					chamarTelaEditarTelefones(cdCliente, nomeCliente);
-					// IMPLEMENTAR BUSCAR TELEFONES
-					// sada
-				}
-			}
-		});
 	}
 
 	static void chamarAcoesCadastro() {
@@ -1209,8 +1243,7 @@ public class exercicio51 {
 			@Override
 			public void windowClosing(WindowEvent e) {
 
-				editando = false;
-				excluindo = false;
+				telaCadastro.setVisible(false);
 				atualizarTelaInicial();
 			}
 
@@ -1239,8 +1272,6 @@ public class exercicio51 {
 						forcarSaida(painelCadastro);
 						telaCadastro.setVisible(false);
 						atualizarTelaInicial();
-						tabela.clearSelection();
-						tabela.changeSelection(tabela.getRowCount() - 2, 0, false, false);
 					}
 				}
 
@@ -1312,7 +1343,7 @@ public class exercicio51 {
 
 				if (botaoAdicionarTelefone.isEnabled()) {
 					String cdCliente = campoCodigo.getText();
-					String nome = campoNome.getText();
+					String nome = campoNome.getText().toUpperCase();
 					chamarTelaEditarTelefones(cdCliente, nome);
 				}
 			}
@@ -1323,7 +1354,7 @@ public class exercicio51 {
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (campoNome.isEnabled()) {
-					if (campoNome.getText().isEmpty() || !verificarTextoDigitado(campoNome.getText())) {
+					if (campoNome.getText().isEmpty() || !verificarTextoDigitado(campoNome.getText().toUpperCase())) {
 						JOptionPane.showMessageDialog(null, "O campo nome é obrigatório");
 						campoNome.grabFocus();
 					} else {
@@ -1388,7 +1419,7 @@ public class exercicio51 {
 					campoCpf.grabFocus();
 				} else {
 					if (validarNumeros(a)) {
-						if (!validarCpf(a) && !editando) {
+						if (!validarCpf(a)) {
 							JOptionPane.showMessageDialog(null, "CPF já cadastrado.");
 							campoCpf.grabFocus();
 						} else {
@@ -1427,7 +1458,7 @@ public class exercicio51 {
 					campoRg.grabFocus();
 				} else {
 					if (validarNumeros(a)) {
-						if (!validarCpf(a) && !editando) {
+						if (!validarRg(a)) {
 							JOptionPane.showMessageDialog(null, "RG já cadastrado.");
 							campoRg.grabFocus();
 						} else {
@@ -1443,6 +1474,7 @@ public class exercicio51 {
 			@Override
 			public void focusGained(FocusEvent e) {
 				botaoAdicionarTelefone.setEnabled(true);
+				botaoSalvar.setEnabled(true);
 				campoRg.setBackground(Color.yellow);
 			}
 		});
@@ -1476,7 +1508,7 @@ public class exercicio51 {
 
 			@Override
 			public void windowClosing(WindowEvent e) {
-
+				telaConsulta.setVisible(false);
 				atualizarTelaInicial();
 			}
 
@@ -1543,18 +1575,19 @@ public class exercicio51 {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				resultadoPesquisa.clearSelection();
-				resultadoPesquisa.changeSelection(tabela.getRowCount() - 2, 0, false, false);
-				telefonesPesquisa.clearSelection();
-				telefonesPesquisa.changeSelection(tabela.getRowCount() - 2, 0, false, false);
-				limparJable(modelo, resultadoPesquisa);
-				limparJable(tel, telefonesPesquisa);
-				resultadoPesquisa.setModel(modelo);
-				telefonesPesquisa.setModel(tel);
+
+				limparJable(resultadoPesquisa);
+				limparJable(telefonesPesquisa);
+				resultadoPesquisa.setModel(modeloPesq);
+				telefonesPesquisa.setModel(telPesq);
+				String conteudo = campoPesquisar.getText().toUpperCase();
 				if (rbTodos.isSelected()) {
 					listarTodos(0);
-				} else {
+				} else if (verificarTextoDigitado(conteudo)) {
 					pesquisar();
+				} else {
+					JOptionPane.showMessageDialog(null,
+							"Consulta inválida! Por favor verifique o conteúdo pesquisado e tente novamente.");
 				}
 			}
 		});
@@ -1691,6 +1724,64 @@ public class exercicio51 {
 				}
 			}
 		});
+
+		resultadoPesquisa.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				/* Método sem implementação necessária */
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				/* Método sem implementação necessária */
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				/* Método sem implementação necessária */
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				/* Método sem implementação necessária */
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				limparJable(telefonesPesquisa);
+				mostrarTelefonesPesquisa();
+			}
+		});
+
+		resultadoPesquisa.addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				/* Método sem implementação necessária */
+
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				int linha = resultadoPesquisa.getSelectedRow();
+				if ((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_DOWN) && linha > 0) {
+					limparJable(telefonesPesquisa);
+					mostrarTelefonesPesquisa();
+					String cd = (String) resultadoPesquisa.getValueAt(linha, 0);
+					k = Integer.parseInt(cd) - 1;
+					l = 0;
+					limparJable(telefonesPesquisa);
+					carregarTelefonesCliente(cd, telPesq);
+				}
+			}
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				/* Método sem implementação necessária */
+
+			}
+		});
 	}
 
 	static void chamarAcoesEditarExcluir() {
@@ -1747,7 +1838,6 @@ public class exercicio51 {
 			public void actionPerformed(ActionEvent e) {
 
 				telaEditarExcluir.setVisible(false);
-				;
 				atualizarTelaInicial();
 			}
 		});
@@ -1758,6 +1848,9 @@ public class exercicio51 {
 			public void actionPerformed(ActionEvent e) {
 				cdPesq = campoEditarExcluir.getText();
 				pesquisarRegistro(cdPesq);
+				k = Integer.parseInt(dados[5]);
+				l = Integer.parseInt(dados[6]);
+				pos = k;
 				menuInicial.setEnabled(true);
 				if (editando) {
 					String cdReturn = dados[0];
@@ -1770,8 +1863,6 @@ public class exercicio51 {
 						campoEmail.setText(dados[2]);
 						campoCpf.setText(dados[3]);
 						campoRg.setText(dados[4]);
-						k = Integer.parseInt(dados[5]);
-						l = Integer.parseInt(dados[6]);
 						botaoSalvar.setVisible(false);
 						botaoSalvar.setEnabled(false);
 						botaoSalvarEdicao.setEnabled(true);
@@ -1858,17 +1949,22 @@ public class exercicio51 {
 		editarTelefone.addActionListener(new ActionListener() {
 
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent e) {
 				int linha = telefones.getSelectedRow();
 				String novoTelefone = JOptionPane.showInputDialog("Informe o novo telefone!");
-				telefones.setValueAt(novoTelefone, linha, 1);
+				if (validarNumeros(novoTelefone)) {
+					telefones.setValueAt(novoTelefone, linha, 1);
+				} else {
+					JOptionPane.showMessageDialog(null,
+							"Telefone inválido! Verifique os dados informados e tente novamente.");
+				}
 			}
 		});
 
 		excluirTelefone.addActionListener(new ActionListener() {
 
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent e) {
 				int linha = telefones.getSelectedRow();
 				tel.removeRow(linha);
 				int qtde = telefones.getRowCount();
@@ -1880,6 +1976,15 @@ public class exercicio51 {
 					}
 				}
 
+				if (editando || adicionandoTelefone) {
+					for (int x = 0; x < tamanhoTel; x++) {
+						telefonesCliente[k][x] = " ";
+					}
+				} else {
+					for (int x = 0; x < tamanhoTel; x++) {
+						telefonesCliente[i][x] = " ";
+					}
+				}
 				cdTelefone--;
 				qtdeTel--;
 			}
@@ -1905,11 +2010,7 @@ public class exercicio51 {
 				if (botaoCancelarTelefone.isEnabled()) {
 					if (JOptionPane.showConfirmDialog(null, "Deseja cancelar?", "Confirmar ação Cancelar.",
 							JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
-						telaTelefones.setVisible(false);
-						editando = false;
-						excluindo = false;
-						telefones.clearSelection();
-						telefones.changeSelection(telefones.getRowCount() - 2, 0, false, false);
+						telaTelefones.dispose();
 					}
 				}
 			}
@@ -1924,7 +2025,11 @@ public class exercicio51 {
 					String num = campoTelefone.getText();
 					if (!validarNumeros(num) || campoTelefone.getText().isEmpty()) {
 						JOptionPane.showMessageDialog(null,
-								"Telefone inválido! verifique os dados informados e tente novamente.");
+								"Telefone inválido! Verifique os dados informados e tente novamente.");
+						campoTelefone.grabFocus();
+					} else if (validarTelefone(num)) {
+						JOptionPane.showMessageDialog(null,
+								"Telefone já cadastrado para esse cliente!\n Um telefone não pode ser cadastrado mais de uma vez para um mesmo cliente");
 						campoTelefone.grabFocus();
 					} else {
 						campoTelefone.setBackground(Color.white);
@@ -1949,39 +2054,32 @@ public class exercicio51 {
 
 				if (JOptionPane.showConfirmDialog(null, "Deseja Salvar?", "Confirmar ação Salvar.",
 						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
-					int qtde = telefones.getRowCount();
-					String[] telefonesCadastrados = new String[qtde];
-					for (int x = 0; x < qtde; x++) {
+					qtdeTel = telefones.getRowCount();
+					telefonesCadastrados = new String[qtdeTel];
+					for (int x = 0; x < qtdeTel; x++) {
 						if (x > 0) {
 							telefonesCadastrados[x] = (String) telefones.getValueAt(x, 1);
 						}
 					}
-					gravarTelefone(qtde, telefonesCadastrados);
 					telefones.changeSelection(telefones.getRowCount() - 2, 0, false, false);
-					telaTelefones.setVisible(false);
+					telaTelefones.dispose();
 					if (adicionandoTelefone) {
 						atualizarTelaInicial();
+						gravarTelefone(k, l, qtdeTel, telefonesCadastrados);
 					}
-
+					telaTelefones.dispose();
 				}
 			}
 		});
 	}
 
-	static void limparJable(DefaultTableModel model, JTable table) {
-		int qtde = table.getRowCount();
-		for (int x = qtde - 1; x > 0; x--) {
-			model.removeRow(x);
+	static void limparJable(JTable table) {
+		while (table.getModel().getRowCount() > 0) {
+			((DefaultTableModel) table.getModel()).removeRow(0);
 		}
 	}
 
-	static void bloquearEdicaoJtable(JTable t) {
-		// IMPLEMENTAR ESSE CASO COM
-		// URGÊNCIA********************************************************************
-	}
-
 	static int contarTelefonesCliente(String cdCliente) {
-		System.out.println("contarTelefonesClientes");
 		int contTel = 0;
 		String vazio = " ";
 		for (int x = 0; x < tamanhoTotal; x++) {
@@ -1997,44 +2095,41 @@ public class exercicio51 {
 				}
 			}
 		}
-		System.out.println("quantidade de telefone do clieente: " + contTel);
 		return contTel;
 	}
 
 	static void gravarRegistros() {
-		System.out.println("gravarRegistros");
 		lista[i][j] = campoCodigo.getText();
-		lista[i][j + 1] = campoNome.getText();
-		lista[i][j + 2] = campoEmail.getText();
+		lista[i][j + 1] = campoNome.getText().toUpperCase();
+		lista[i][j + 2] = campoEmail.getText().toLowerCase();
 		lista[i][j + 3] = campoCpf.getText();
 		lista[i][j + 4] = campoRg.getText();
 		posicoes[i] = "ocupado";
 		qtdeCad++;
 		qtdeLivre--;
 		cod++;
+		gravarTelefone(i, j, qtdeTel, telefonesCadastrados);
 		telaCadastro.setVisible(false);
 	}
 
-	static void gravarTelefone(int quantidade, String[] dadosParaGravar) {
-		telefonesCliente[i][j] = campoCodigo.getText();
-		System.out.println("quantidade de telefones do cliente: " + quantidade);
-		System.out.println("gravarTelefone");
+	static void gravarTelefone(int m, int n, int quantidade, String[] dadosParaGravar) {
+		telefonesCliente[m][n] = campoCodigo.getText();
 		for (int x = 0; x < quantidade; x++) {
 			if (x > 0) {
-				telefonesCliente[i][x] = dadosParaGravar[x];
-				System.out.println("telefone cadastrado na posição :" + i + "   " + x + "   " + telefonesCliente[i][x]);
+				telefonesCliente[m][x] = dadosParaGravar[x];
 			}
 		}
 	}
 
 	static void editarRegistros(int x, int y) {
 		lista[x][y] = campoCodigo.getText();
-		lista[x][y + 1] = campoNome.getText();
-		lista[x][y + 2] = campoEmail.getText();
+		lista[x][y + 1] = campoNome.getText().toUpperCase();
+		lista[x][y + 2] = campoEmail.getText().toLowerCase();
 		lista[x][y + 3] = campoCpf.getText();
 		lista[x][y + 4] = campoRg.getText();
 		posicoes[x] = "ocupado";
 		telaCadastro.setVisible(false);
+		gravarTelefone(k, l, qtdeTel, telefonesCadastrados);
 		atualizarTelaInicial();
 	}
 
@@ -2044,16 +2139,16 @@ public class exercicio51 {
 		lista[x][y + 2] = " ";
 		lista[x][y + 3] = " ";
 		lista[x][y + 4] = " ";
-		posicoes[x] = "Livre";
+		posicoes[x] = "livre";
 		telaCadastro.setVisible(false);
 		qtdeCad--;
 		qtdeLivre++;
 		cod--;
+		registrosExcluidos++;
 		atualizarTelaInicial();
 	}
 
 	static void pesquisarRegistro(String c) {
-		System.out.println("pesquisarRegistros");
 		boolean achou = false;
 		for (int x = 0; x < tamanhoTotal; x++) {
 			for (int y = 0; y < camposLista; y++) {
@@ -2099,8 +2194,8 @@ public class exercicio51 {
 		return eNumero;
 	}
 
-	static void adicionardadosJTable() {
-		String[] addTable = new String[6];
+	static void adicionardadosJTable(int pos) {
+		String[] addTable = new String[5];
 		int qtdeRegistros = 0;
 		int x = 0;
 		for (x = 0; x < tamanhoTotal; x++) {
@@ -2109,15 +2204,19 @@ public class exercicio51 {
 				qtdeRegistros++;
 			}
 		}
-		for (int i = 0; i < qtdeRegistros; i++) {
-			x = 0;
+
+		for (int i = 0; i < qtdeRegistros + registrosExcluidos; i++) {
 			for (int j = 0; j < camposLista; j++) {
 				if (!lista[i][j].equals(" ")) {
-					addTable[x] = lista[i][j];
-					x++;
+					addTable[0] = lista[i][0];
+					addTable[1] = lista[i][1];
+					addTable[2] = lista[i][2];
+					addTable[3] = lista[i][3];
+					addTable[4] = lista[i][4];
+					modelo.addRow(addTable);
+					i++;
 				}
 			}
-			modelo.addRow(addTable);
 		}
 	}
 
@@ -2149,11 +2248,13 @@ public class exercicio51 {
 		boolean liberadoParagravar = true;
 		Component comp;
 		String nome;
+		String texto;
 		for (int contComp = 0; contComp < c.getComponentCount(); contComp++) {
 			comp = c.getComponent(contComp);
 			if (comp instanceof JTextField) {
 				nome = ((JTextField) comp).getName();
-				if (((JTextField) comp).getText().isEmpty()) {
+				texto = ((JTextField) comp).getText();
+				if (((JTextField) comp).getText().isEmpty() || !verificarTextoDigitado(texto)) {
 					liberadoParagravar = false;
 				} else if ((nome.equals("campoCpf")) || (nome.equals("campoRg"))) {
 					String txt = ((JTextField) comp).getText();
@@ -2175,13 +2276,21 @@ public class exercicio51 {
 		return liberadoParagravar;
 	}
 
+	// Função que verifica se o cpf informado já foi cadastrado
 	static boolean validarCpf(String cpf) {
 		boolean cpfValido = true;
 		for (int x = 0; x < tamanhoTotal; x++) {
 			for (int y = 0; y < camposLista; y++) {
-				String conteudo = lista[x][y];
-				if (y == 4 && cpf.equals(conteudo)) {
-					cpfValido = false;
+				if (editando && x != pos) {
+					String conteudo = lista[x][y];
+					if (y == 4 && cpf.equals(conteudo)) {
+						cpfValido = false;
+					}
+				} else {
+					String conteudo = lista[x][y];
+					if (y == 4 && cpf.equals(conteudo)) {
+						cpfValido = false;
+					}
 				}
 			}
 		}
@@ -2192,9 +2301,14 @@ public class exercicio51 {
 		boolean rgValido = true;
 		for (int x = 0; x < tamanhoTotal; x++) {
 			for (int y = 0; y < camposLista; y++) {
-				String conteudo = lista[x][y];
-				if (y == 5) {
-					if (conteudo.equals(rg)) {
+				if (editando && x != pos) {
+					String conteudo = lista[x][y];
+					if (y == 5 && rg.equals(conteudo)) {
+						rgValido = false;
+					}
+				} else {
+					String conteudo = lista[x][y];
+					if (y == 5 && rg.equals(conteudo)) {
 						rgValido = false;
 					}
 				}
@@ -2204,7 +2318,7 @@ public class exercicio51 {
 	}
 
 	static void chamarTelaEditarTelefones(String cdCliente, String nomeCliente) {
-		System.out.println("chamarTelaEditarTelefones");
+		criarTelaTelefone();
 		lbCliente.setText("Tefones de contato do cliente: " + cdCliente + " - " + nomeCliente);
 		painelTelefones.add(lbCliente);
 		telaTelefones.setVisible(true);
@@ -2214,12 +2328,13 @@ public class exercicio51 {
 			j = 0;
 			menuInicial.setVisible(false);
 		} else {
-			System.out.println(cdPesq + "   Esse é o código do cliente");
 			cdTelefone = contarTelefonesCliente(cdCliente) + 1;
-			carregarTelefonesCliente(cdCliente);
+			carregarTelefonesCliente(cdCliente, tel);
 		}
 	}
 
+	// procedimento que não permite que o campo seja gravado apenas com o
+	// caractere espaço
 	static boolean verificarTextoDigitado(String texto) {
 		boolean textoValido = true;
 		texto = texto.replace(" ", "");
@@ -2229,8 +2344,7 @@ public class exercicio51 {
 		return textoValido;
 	}
 
-	static void carregarTelefonesCliente(String cd) {
-		System.out.println("carregarTelefonesCliente: " + cd);
+	static void carregarTelefonesCliente(String cd, DefaultTableModel mdlo) {
 		String[] addTable = new String[6];
 		addTable[0] = telefonesCliente[k][l];
 		addTable[1] = telefonesCliente[k][l + 1];
@@ -2238,18 +2352,15 @@ public class exercicio51 {
 		addTable[3] = telefonesCliente[k][l + 3];
 		addTable[4] = telefonesCliente[k][l + 4];
 		addTable[5] = telefonesCliente[k][l + 5];
-		System.out.println(k + "  posições  " + l);
 
 		String vazio = " ";
 		int cdTel = 1;
 		for (int x = 0; x < tamanhoTel; x++) {
 			if (!addTable[x].equals(vazio) && x > 0) {
-				System.out.println("conteudo/telefone  " + addTable[x] + "  cd cliente  " + cd + "  x  " + x + "     "
-						+ !addTable[x].equals(vazio));
 				String[] add = new String[2];
 				add[0] = String.valueOf(cdTel);
 				add[1] = addTable[x];
-				tel.addRow(add);
+				mdlo.addRow(add);
 				cdTel++;
 			}
 		}
@@ -2257,14 +2368,14 @@ public class exercicio51 {
 
 	static void pesquisar() {
 		/* Método a ser implementado */
-		String cd = campoPesquisar.getText();
+		String cd = campoPesquisar.getText().toUpperCase();
 		String[] addTable = new String[5];
 		if (rbCodigo.isSelected()) {
 			pesquisarRegistro(cd);
 			for (int x = 0; x < dados.length - 2; x++) {
 				addTable[x] = dados[x];
 			}
-			modelo.addRow(addTable);
+			modeloPesq.addRow(addTable);
 		} else if (rbNome.isSelected()) {
 			for (int x = 0; x < tamanhoTotal; x++) {
 				for (int y = 0; y < camposLista; y++) {
@@ -2275,7 +2386,7 @@ public class exercicio51 {
 						addTable[2] = lista[x][2];
 						addTable[3] = lista[x][3];
 						addTable[4] = lista[x][4];
-						modelo.addRow(addTable);
+						modeloPesq.addRow(addTable);
 					}
 				}
 			}
@@ -2291,11 +2402,32 @@ public class exercicio51 {
 			retorno[2] = lista[pos][2];
 			retorno[3] = lista[pos][3];
 			retorno[4] = lista[pos][4];
-			modelo.addRow(retorno);
+			if (!retorno[0].equals(" ")) {
+				modeloPesq.addRow(retorno);
+			}
 			listarTodos(pos + 1);
 		}
-		// return retorno;
+	}
 
+	static boolean validarTelefone(String t) {
+		boolean jaCadastrado = false;
+		for (int x = 0; x < telefones.getRowCount(); x++) {
+			if (t.equals((String) telefones.getValueAt(x, 1))) {
+				jaCadastrado = true;
+			}
+		}
+		return jaCadastrado;
+	}
+
+	static void mostrarTelefonesPesquisa() {
+		int linha = resultadoPesquisa.getSelectedRow();
+		String cd = (String) resultadoPesquisa.getValueAt(linha, 0);
+		int telefones = contarTelefonesCliente(cd);
+		if (telefones > 0) {
+			k = Integer.parseInt(cd) - 1;
+			l = 0;
+			carregarTelefonesCliente(cd, telPesq);
+		}
 	}
 
 	static void fecharTelas() {
