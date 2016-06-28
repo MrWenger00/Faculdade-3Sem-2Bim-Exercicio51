@@ -15,6 +15,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.text.ParseException;
+
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -22,6 +24,7 @@ import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
@@ -29,10 +32,18 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.MaskFormatter;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/*SCROLL NA TABELA ADD TELEFONES 
+ * ERRO QUANDO VOLTA AO TELEFONE
+ * TABELA DOS TELEFONES DA TELA DE CADASTRO
+ * 
+ * */
 public class exercicio51 {
 	static JFrame menuInicial;
 	static JFrame telaCadastro;
@@ -84,10 +95,12 @@ public class exercicio51 {
 	static JTable resultadoPesquisa;
 	static JTable telefones;
 	static JTable telefonesPesquisa;
+	static JTable telefonesInseridos;
 
 	static JScrollPane tabelaPrincipal;
 	static JScrollPane tabelaPesquisa;
 	static JScrollPane tabelaPesquisaTelefones;
+	static JScrollPane tabelaTelefones;
 
 	static JPopupMenu menuOpcoes;
 	static JPopupMenu menuTelefones;
@@ -95,11 +108,12 @@ public class exercicio51 {
 	static JTextField campoNome;
 	static JTextField campoEmail;
 	static JTextField campoCodigo;
-	static JTextField campoCpf;
 	static JTextField campoRg;
 	static JTextField campoPesquisar;
 	static JTextField campoEditarExcluir;
 	static JTextField campoTelefone;
+	static JFormattedTextField campoCpf;
+	static MaskFormatter mascara = null;
 
 	static JMenuItem editar;
 	static JMenuItem excluir;
@@ -139,7 +153,7 @@ public class exercicio51 {
 	static String[][] telefonesCliente = new String[tamanhoTotal][tamanhoTel];
 	static String[] posicoes = new String[tamanhoTotal];
 	static String[] dados = new String[7];
-	static String[] telefonesCadastrados;
+	static String[] telefonesCadastrados = new String[6];
 
 	static JLabel titulo;
 	static JLabel msg;
@@ -159,6 +173,7 @@ public class exercicio51 {
 	static JLabel lbApresentacao2;
 	static JLabel lbApresentacao3;
 	static JLabel lbLogo;
+	static JEditorPane tels;
 	static JEditorPane ajuda;
 
 	static JProgressBar carregarInicio;
@@ -166,12 +181,19 @@ public class exercicio51 {
 	public static void main(String[] args) {
 		liberarposicoes();
 		inicializarLista();
+		zerarTelefonesCadastrados();
 		criarTelaApresentacao();
 	}
 
 	static void liberarposicoes() {
 		for (int g = 0; g < tamanhoTotal; g++) {
 			posicoes[g] = "livre";
+		}
+	}
+
+	static void zerarTelefonesCadastrados() {
+		for (int x = 0; x < tamanhoTel; x++) {
+			telefonesCadastrados[x] = " ";
 		}
 	}
 
@@ -205,6 +227,11 @@ public class exercicio51 {
 	}
 
 	static void iniciarComponentesApresentacao() {
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (Exception e) {
+			// erro
+		}
 		painelApresentacao = new JPanel();
 		painelApresentacao = new JPanel();
 		painelApresentacao.setLayout(null);
@@ -338,6 +365,9 @@ public class exercicio51 {
 		botaoSair.setLocation(485, 500);
 
 		modelo = new DefaultTableModel(campos, 0) {
+
+			private static final long serialVersionUID = 1L;
+
 			public boolean isCellEditable(int row, int column) {
 				return false;
 			}
@@ -377,6 +407,11 @@ public class exercicio51 {
 	}
 
 	static void mostrarMenu() {
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (Exception e) {
+			// erro
+		}
 		travarTela(menuInicial, 600, 600);
 		menuInicial.getContentPane().setBackground(Color.BLACK);
 		menuInicial.setVisible(true);
@@ -410,9 +445,11 @@ public class exercicio51 {
 		cdTelefone = 1;
 		cdPesq = "";
 		menuInicial.dispose();
+		zerarTelefonesCadastrados();
 		criarMenu();
-		if(numClientes==100){
-			JOptionPane.showMessageDialog(null, "Limite de cadastro de clientes atingido!\n Não é possível cadastrar novos clientes.");
+		if (numClientes == 100) {
+			JOptionPane.showMessageDialog(null,
+					"Limite de cadastro de clientes atingido!\n Não é possível cadastrar novos clientes.");
 		}
 	}
 
@@ -451,8 +488,8 @@ public class exercicio51 {
 
 		campoCodigo = new JTextField();
 		campoCodigo.setLayout(null);
-		campoCodigo.setBounds(10, 50, 50, 20);
-		campoCodigo.setBackground(Color.red);
+		campoCodigo.setBounds(10, 50, 50, 30);
+		campoCodigo.setBackground(Color.lightGray);
 		campoCodigo.setEnabled(false);
 		campoCodigo.setVisible(true);
 		campoCodigo.setName("campoCodigo");
@@ -464,7 +501,7 @@ public class exercicio51 {
 
 		campoNome = new JTextField();
 		campoNome.setLayout(null);
-		campoNome.setBounds(10, 110, 570, 20);
+		campoNome.setBounds(10, 110, 570, 30);
 		campoNome.setVisible(true);
 		campoNome.setName("campoNome");
 
@@ -475,7 +512,7 @@ public class exercicio51 {
 
 		campoEmail = new JTextField();
 		campoEmail.setLayout(null);
-		campoEmail.setBounds(10, 180, 570, 20);
+		campoEmail.setBounds(10, 180, 570, 30);
 		campoEmail.setVisible(true);
 		campoEmail.setName("campoEmail");
 
@@ -484,9 +521,17 @@ public class exercicio51 {
 		lbEmail.setFont(new Font("Arial", Font.BOLD + Font.ITALIC, 12));
 		lbEmail.setVisible(true);
 
-		campoCpf = new JTextField();
+		try {
+			mascara = new MaskFormatter("###.###.###-##");
+			mascara.setPlaceholderCharacter('_');
+		} catch (ParseException excp) {
+			System.err.println(excp.getMessage());
+			System.exit(-1);
+		}
+
+		campoCpf = new JFormattedTextField(mascara);
 		campoCpf.setLayout(null);
-		campoCpf.setBounds(10, 250, 570, 20);
+		campoCpf.setBounds(10, 250, 570, 30);
 		campoCpf.setVisible(true);
 		campoCpf.setName("campoCpf");
 
@@ -497,7 +542,7 @@ public class exercicio51 {
 
 		campoRg = new JTextField();
 		campoRg.setLayout(null);
-		campoRg.setBounds(10, 320, 570, 20);
+		campoRg.setBounds(10, 320, 570, 30);
 		campoRg.setVisible(true);
 		campoRg.setName("campoRg");
 
@@ -518,10 +563,21 @@ public class exercicio51 {
 		botaoExcluirRegistro.setSize(200, 20);
 		botaoExcluirRegistro.setLocation(67, 500);
 
+		tels = new JEditorPane();
+		tels.setEditable(false);
+		tels.setContentType("text/html");
+		tels.setSize(200, 100);
+		tels.setLocation(370, 380);
+
 		mostrarCadastro();
 	}
 
 	static void mostrarCadastro() {
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (Exception e) {
+			// erro
+		}
 		travarTela(telaCadastro, 600, 600);
 		telaCadastro.setVisible(false);
 		telaCadastro.add(painelCadastro);
@@ -538,6 +594,7 @@ public class exercicio51 {
 		painelCadastro.add(campoRg);
 		painelCadastro.add(lbRg);
 		painelCadastro.add(botaoAdicionarTelefone);
+		painelCadastro.add(tels);
 		chamarAcoesCadastro();
 	}
 	// funcoes que criam e exibem a tela de consulta e seus componentes
@@ -580,7 +637,7 @@ public class exercicio51 {
 
 		campoPesquisar = new JTextField();
 		campoPesquisar.setLayout(null);
-		campoPesquisar.setBounds(10, 60, 570, 20);
+		campoPesquisar.setBounds(10, 60, 570, 30);
 		campoPesquisar.setEnabled(false);
 		campoPesquisar.setBackground(Color.lightGray);
 		campoPesquisar.setVisible(true);
@@ -598,6 +655,8 @@ public class exercicio51 {
 		botaoSairPesquisa.setLocation(480, 90);
 
 		modeloPesq = new DefaultTableModel(campos, 0) {
+			private static final long serialVersionUID = 1L;
+
 			public boolean isCellEditable(int row, int column) {
 				return false;
 			}
@@ -619,11 +678,12 @@ public class exercicio51 {
 		lbPesquisaTelefones.setVisible(true);
 
 		telPesq = new DefaultTableModel(colunaTelefones, 0) {
+			private static final long serialVersionUID = 1L;
+
 			public boolean isCellEditable(int row, int column) {
 				return false;
 			}
 		};
-		telPesq.addRow(colunaTelefones);
 
 		telefonesPesquisa = new JTable();
 		telefonesPesquisa.setLayout(null);
@@ -640,6 +700,11 @@ public class exercicio51 {
 	}
 
 	static void mostrarConsulta() {
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (Exception e) {
+			// erro
+		}
 		travarTela(telaConsulta, 600, 700);
 		telaConsulta.add(painelconsulta);
 		painelconsulta.add(lbPesquisa);
@@ -671,7 +736,7 @@ public class exercicio51 {
 
 		campoEditarExcluir = new JTextField();
 		campoEditarExcluir.setLayout(null);
-		campoEditarExcluir.setBounds(10, 50, 270, 20);
+		campoEditarExcluir.setBounds(10, 50, 270, 30);
 		campoEditarExcluir.setVisible(true);
 
 		botaoOk = new JButton("Ok");
@@ -695,6 +760,11 @@ public class exercicio51 {
 	}
 
 	static void mostrarTelaEditarExcluir() {
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (Exception e) {
+			// erro
+		}
 		telaEditarExcluir.add(painelEditarExcluir);
 		painelEditarExcluir.add(lbMsgEditarExcluir);
 		painelEditarExcluir.add(campoEditarExcluir);
@@ -729,7 +799,7 @@ public class exercicio51 {
 
 		campoTelefone = new JTextField();
 		campoTelefone.setLayout(null);
-		campoTelefone.setBounds(10, 50, 270, 20);
+		campoTelefone.setBounds(10, 50, 270, 30);
 		campoTelefone.setVisible(true);
 
 		botaoAddTelefone = new JButton("Adcionar");
@@ -751,17 +821,24 @@ public class exercicio51 {
 		botaoCancelarTelefone.setLocation(180, 330);
 
 		tel = new DefaultTableModel(colunaTelefones, 0) {
+			private static final long serialVersionUID = 1L;
+
 			public boolean isCellEditable(int row, int column) {
 				return false;
 			}
 		};
-		tel.addRow(colunaTelefones);
 
 		telefones = new JTable();
 		telefones.setLayout(null);
 		telefones.setBounds(10, 120, 475, 200);
 		telefones.setVisible(true);
 		telefones.setModel(tel);
+
+		tabelaTelefones = new JScrollPane(telefones);
+		tabelaTelefones.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		tabelaTelefones.setBounds(10, 120, 475, 200);
+		tabelaTelefones.setVisible(true);
+		tabelaTelefones.setViewportView(telefones);
 
 		editarTelefone = new JMenuItem("Editar");
 		excluirTelefone = new JMenuItem("Excluir");
@@ -774,6 +851,7 @@ public class exercicio51 {
 	}
 
 	static void mostrarTelaTelefone() {
+
 		travarTela(telaTelefones, 500, 400);
 		telaTelefones.setVisible(false);
 		telaTelefones.add(painelTelefones);
@@ -781,7 +859,7 @@ public class exercicio51 {
 		painelTelefones.add(botaoSalvarTelefone);
 		painelTelefones.add(botaoCancelarTelefone);
 		painelTelefones.add(campoTelefone);
-		painelTelefones.add(telefones);
+		painelTelefones.add(tabelaTelefones);
 		painelTelefones.add(lbTelefone);
 		chamarAcoesTelatelefones();
 	}
@@ -789,6 +867,11 @@ public class exercicio51 {
 	static void criarTelaAjuda() {
 		indiceProximo = 1;
 
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (Exception e) {
+			// erro
+		}
 		telaAjuda = new JFrame("Tela de Ajuda");
 		telaAjuda.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		telaAjuda.setVisible(true);
@@ -858,7 +941,7 @@ public class exercicio51 {
 			ajuda.setText("<font color=" + "blue>" + "<font size =" + "10>" + "<b>Cadastro de clientes</b></font>"
 					+ "<br><br><font color =" + "black" + "><cont size =" + "9>" + "<b>Editar Clientes:</b><br></font>"
 					+ "<br>" + "<font color =" + "black"
-					+ "><b>2.0 - Existem dois modos de editar um registro: pesquisar por código, edição direta<br><font color ="
+					+ "><b>2.0 - Existem três modos de editar um registro: pesquisar por código, edição direta e edição direta com duplo clique<br><font color ="
 					+ "blue" + ">" + " <br>1º modo: Pesquisando pelo código:</font> <font color =" + "red" + "><br><br>"
 					+ "  a - Clique em no botão [Editar].<br>"
 					+ "  b - Informe o código do cliente e clique em [OK].<br>"
@@ -870,8 +953,10 @@ public class exercicio51 {
 					+ "  a - Clique sobre o registro para selecioná-lo e clique com o botão direito do mouse.<br>"
 					+ "  b - No menu que aparecerá, clique em [Editar].<br>"
 					+ "  c - A tela de cadastra será carregado com os dados do cliente que foi selecionado na tabela.<br>"
-					+ "  d - Faça as edições necessárias(incluindo dados do cliente e telefones) e clique em [Atualizar]."
-					+ "  <br></font>");
+					+ "  d - Faça as edições necessárias(incluindo dados do cliente e telefones) e clique em [Atualizar].<br><br>"
+					+ "  <br></font>" + " <font color =" + "blue"
+					+ ">3° modo: Edição direta Com duplo clique<br><br></font>"
+					+ "  Nesse caso, basta clicar duas vezes sobre a tabela selecionando o resgitro desejado.");
 		} else if (indiceProximo == 3) {// excluir
 			ajuda.setText("<font color=" + "blue>" + "<font size =" + "10>" + "<b>Cadastro de clientes</b></font>"
 					+ "<br><br><font color =" + "black" + "><cont size =" + "9>" + "<b>Excluir Clientes:</b></font>"
@@ -1074,6 +1159,10 @@ public class exercicio51 {
 				if (e.getButton() == MouseEvent.BUTTON3 && cod > 0) {
 					menuOpcoes.show(tabela, e.getX(), e.getY());
 				}
+
+				if (e.getClickCount() == 2) {
+					editar.doClick();
+				}
 			}
 		});
 		botaoAdicionar.addActionListener(new ActionListener() {
@@ -1164,6 +1253,8 @@ public class exercicio51 {
 				campoEmail.setText(dados[2]);
 				campoCpf.setText(dados[3]);
 				campoRg.setText(dados[4]);
+				campoCpf.setEditable(false);
+				campoRg.setEditable(false);
 				k = Integer.parseInt((String) tabela.getValueAt(linha, 0)) - 1;
 				l = 0;
 				pos = k;
@@ -1184,6 +1275,11 @@ public class exercicio51 {
 
 				excluindo = true;
 				telaCadastro.setVisible(true);
+				campoCodigo.setEnabled(false);
+				campoCpf.setEditable(false);
+				campoNome.setEditable(false);
+				campoRg.setEditable(false);
+				campoEmail.setEditable(false);
 				campoCodigo.setText((String) tabela.getValueAt(linha, 0));
 				campoNome.setText((String) tabela.getValueAt(linha, 1));
 				campoEmail.setText((String) tabela.getValueAt(linha, 2));
@@ -1212,6 +1308,19 @@ public class exercicio51 {
 				campoNome.grabFocus();
 				if (editando) {
 					botaoAdicionarTelefone.setEnabled(true);
+					for (int x = 0; x < tamanhoTotal; x++) {
+						for (int y = 0; y < tamanhoTel; y++) {
+							String conteudo = telefonesCliente[x][y];
+							if (y == 0 && conteudo.equals(cdPesq)) {
+								telefonesCadastrados[0] = telefonesCliente[x][1];
+								telefonesCadastrados[1] = telefonesCliente[x][2];
+								telefonesCadastrados[2] = telefonesCliente[x][3];
+								telefonesCadastrados[3] = telefonesCliente[x][4];
+								telefonesCadastrados[4] = telefonesCliente[x][5];
+
+							}
+						}
+					}
 				} else {
 
 					campoEmail.setEnabled(false);
@@ -1220,6 +1329,10 @@ public class exercicio51 {
 
 					camposPreenchidos = verificarCamposPreenchidos(painelCadastro);
 				}
+				tels.setText("<font color=" + "blue>" + "<font size =" + "4>Telefones do cliente:</font><br>"
+						+ "<font color=" + "black>" + "<font size =" + "4>" + telefonesCadastrados[0] + "<br>"
+						+ telefonesCadastrados[1] + "<br>" + telefonesCadastrados[2] + "<br>" + telefonesCadastrados[3]
+						+ "<br>" + telefonesCadastrados[4]);
 			}
 
 			@Override
@@ -1293,7 +1406,7 @@ public class exercicio51 {
 						}
 					} else {
 						JOptionPane.showMessageDialog(null,
-								"Não foi possível salvar o regitro!\n Todos os campo devem ser preenchidos, verifique os dados informados e tente novamente.");
+								"Não foi possível salvar o regitro!\n Todos os campo devem ser preenchidos e os campos RG e CPF não podem ser repetidos\n verifique os dados informados e tente novamente.");
 						campoNome.grabFocus();
 					}
 				}
@@ -1307,13 +1420,11 @@ public class exercicio51 {
 			public void actionPerformed(ActionEvent e) {
 
 				if (botaoSalvarEdicao.isEnabled() && botaoSalvarEdicao.isVisible()) {
-					if (verificarDadosDigitados(painelCadastro)) {
-						if (JOptionPane.showConfirmDialog(null, "Deseja salvar o registro?", "Confirmar ação salvar",
-								JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
-							editarRegistros(k, l);
-							telaCadastro.setVisible(false);
-							atualizarTelaInicial();
-						}
+					if (JOptionPane.showConfirmDialog(null, "Deseja salvar o registro?", "Confirmar ação salvar",
+							JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+						editarRegistros(k, l);
+						telaCadastro.setVisible(false);
+						atualizarTelaInicial();
 					}
 				}
 
@@ -1344,6 +1455,7 @@ public class exercicio51 {
 				if (botaoAdicionarTelefone.isEnabled()) {
 					String cdCliente = campoCodigo.getText();
 					String nome = campoNome.getText().toUpperCase();
+					telefones.setModel(tel);
 					chamarTelaEditarTelefones(cdCliente, nome);
 				}
 			}
@@ -1353,17 +1465,11 @@ public class exercicio51 {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (campoNome.isEnabled()) {
-					if (campoNome.getText().isEmpty() || !verificarTextoDigitado(campoNome.getText().toUpperCase())) {
-						JOptionPane.showMessageDialog(null, "O campo nome é obrigatório");
-						campoNome.grabFocus();
-					} else {
-						campoNome.setBackground(Color.white);
-						campoEmail.setFocusable(true);
-						if (!camposPreenchidos) {
-							campoEmail.grabFocus();
-						}
-					}
+
+				campoNome.setBackground(Color.white);
+				campoEmail.setFocusable(true);
+				if (!camposPreenchidos) {
+					campoEmail.grabFocus();
 				}
 			}
 
@@ -1382,17 +1488,10 @@ public class exercicio51 {
 			@Override
 			public void focusLost(FocusEvent e) {
 
-				if (campoEmail.isEnabled()) {
-					if (campoEmail.getText().isEmpty() || !verificarTextoDigitado(campoEmail.getText())) {
-						campoEmail.grabFocus();
-						JOptionPane.showMessageDialog(null, "O campo e-mail é obrigatório");
-					} else {
-						campoCpf.setFocusable(true);
-						campoEmail.setBackground(Color.white);
-						if (!camposPreenchidos) {
-							campoCpf.grabFocus();
-						}
-					}
+				campoCpf.setFocusable(true);
+				campoEmail.setBackground(Color.white);
+				if (!camposPreenchidos) {
+					campoCpf.grabFocus();
 				}
 			}
 
@@ -1412,26 +1511,10 @@ public class exercicio51 {
 			public void focusLost(FocusEvent e) {
 
 				campoCpf.setBackground(Color.white);
-				String a = campoCpf.getText();
 
-				if ((campoCpf.isEnabled() && campoCpf.getText().isEmpty()) || !verificarTextoDigitado(a)) {
-					JOptionPane.showMessageDialog(null, "Valor inválido, o campo CPF é obrigatório");
-					campoCpf.grabFocus();
-				} else {
-					if (validarNumeros(a)) {
-						if (!validarCpf(a)) {
-							JOptionPane.showMessageDialog(null, "CPF já cadastrado.");
-							campoCpf.grabFocus();
-						} else {
-							campoRg.setFocusable(true);
-							if (!camposPreenchidos) {
-								campoRg.grabFocus();
-							}
-						}
-					} else {
-						JOptionPane.showMessageDialog(null, "Valor inválido, o campo CPF só pode conter números");
-						campoCpf.grabFocus();
-					}
+				campoRg.setFocusable(true);
+				if (!camposPreenchidos) {
+					campoRg.grabFocus();
 				}
 			}
 
@@ -1451,24 +1534,7 @@ public class exercicio51 {
 			public void focusLost(FocusEvent e) {
 
 				campoRg.setBackground(Color.white);
-				String a = campoRg.getText();
-				if ((campoRg.isEnabled() && campoRg.getText().isEmpty())
-						|| !verificarTextoDigitado(campoRg.getText())) {
-					JOptionPane.showMessageDialog(null, "Valor inválido, o campo RG é obrigatório");
-					campoRg.grabFocus();
-				} else {
-					if (validarNumeros(a)) {
-						if (!validarRg(a)) {
-							JOptionPane.showMessageDialog(null, "RG já cadastrado.");
-							campoRg.grabFocus();
-						} else {
-							camposPreenchidos = true;
-						}
-					} else {
-						JOptionPane.showMessageDialog(null, "Valor inválido, o campo RG só pode conter números");
-						campoRg.grabFocus();
-					}
-				}
+				camposPreenchidos = true;
 			}
 
 			@Override
@@ -1557,6 +1623,7 @@ public class exercicio51 {
 				if (e.getButton() == MouseEvent.BUTTON3 && resultadoPesquisa.getRowCount() > 1) {
 					menuOpcoes.show(resultadoPesquisa, e.getX(), e.getY());
 				}
+
 			}
 		});
 
@@ -1876,6 +1943,11 @@ public class exercicio51 {
 						campoEditarExcluir.hasFocus();
 					} else {
 						telaCadastro.setVisible(true);
+						campoCodigo.setEnabled(false);
+						campoCpf.setEditable(false);
+						campoNome.setEditable(false);
+						campoRg.setEditable(false);
+						campoEmail.setEditable(false);
 						campoCodigo.setText(dados[0]);
 						campoNome.setText(dados[1]);
 						campoEmail.setText(dados[2]);
@@ -1976,7 +2048,7 @@ public class exercicio51 {
 					}
 				}
 
-				if (editando || adicionandoTelefone) {
+				if (editando) {
 					for (int x = 0; x < tamanhoTel; x++) {
 						telefonesCliente[k][x] = " ";
 					}
@@ -2010,7 +2082,9 @@ public class exercicio51 {
 				if (botaoCancelarTelefone.isEnabled()) {
 					if (JOptionPane.showConfirmDialog(null, "Deseja cancelar?", "Confirmar ação Cancelar.",
 							JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
-						telaTelefones.dispose();
+						telaTelefones.setVisible(false);
+						adicionandoTelefone = false;
+						limparJable(telefones);
 					}
 				}
 			}
@@ -2055,19 +2129,19 @@ public class exercicio51 {
 				if (JOptionPane.showConfirmDialog(null, "Deseja Salvar?", "Confirmar ação Salvar.",
 						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
 					qtdeTel = telefones.getRowCount();
-					telefonesCadastrados = new String[qtdeTel];
+					telefonesCadastrados[0] = cdPesq;
+					adicionandoTelefone = true;
 					for (int x = 0; x < qtdeTel; x++) {
-						if (x > 0) {
-							telefonesCadastrados[x] = (String) telefones.getValueAt(x, 1);
-						}
+
+						telefonesCadastrados[x + 1] = (String) telefones.getValueAt(x, 1);
+
 					}
-					telefones.changeSelection(telefones.getRowCount() - 2, 0, false, false);
-					telaTelefones.dispose();
-					if (adicionandoTelefone) {
-						atualizarTelaInicial();
-						gravarTelefone(k, l, qtdeTel, telefonesCadastrados);
-					}
-					telaTelefones.dispose();
+
+					telaTelefones.setVisible(false);
+					tels.setText("<font color=" + "blue>" + "<font size =" + "4>Telefones do cliente:<br>"
+							+ "<font color=" + "black>" + "<font size =" + "4>" + telefonesCadastrados[0] + "<br>"
+							+ telefonesCadastrados[1] + "<br>" + telefonesCadastrados[2] + "<br>"
+							+ telefonesCadastrados[3] + "<br>" + telefonesCadastrados[4]);
 				}
 			}
 		});
@@ -2251,20 +2325,23 @@ public class exercicio51 {
 		String texto;
 		for (int contComp = 0; contComp < c.getComponentCount(); contComp++) {
 			comp = c.getComponent(contComp);
-			if (comp instanceof JTextField) {
+			if (comp instanceof JTextField || comp instanceof JFormattedTextField) {
 				nome = ((JTextField) comp).getName();
 				texto = ((JTextField) comp).getText();
 				if (((JTextField) comp).getText().isEmpty() || !verificarTextoDigitado(texto)) {
 					liberadoParagravar = false;
 				} else if ((nome.equals("campoCpf")) || (nome.equals("campoRg"))) {
 					String txt = ((JTextField) comp).getText();
-					if (validarNumeros(txt) == false) {
-						if (nome.equals("campoCpf")) {
-							if (validarCpf(txt) == false) {
-								liberadoParagravar = false;
-							}
-						} else if (nome.equals("campoRg")) {
-							if (validarRg(txt) == false) {
+					if (nome.equals("campoCpf")) {
+						if (!validarCpf(txt)) {
+							JOptionPane.showMessageDialog(null, "CPF já cadastrado.");
+							liberadoParagravar = false;
+						}
+					}
+					if (validarNumeros(txt)) {
+						if (nome.equals("campoRg")) {
+							if (!validarRg(txt)) {
+								JOptionPane.showMessageDialog(null, "RG já cadastrado.");
 								liberadoParagravar = false;
 							}
 						}
@@ -2282,13 +2359,13 @@ public class exercicio51 {
 		for (int x = 0; x < tamanhoTotal; x++) {
 			for (int y = 0; y < camposLista; y++) {
 				if (editando && x != pos) {
-					String conteudo = lista[x][y];
-					if (y == 4 && cpf.equals(conteudo)) {
+					String conteudo = lista[x][3];
+					if (y == 3 && cpf.equals(conteudo)) {
 						cpfValido = false;
 					}
 				} else {
-					String conteudo = lista[x][y];
-					if (y == 4 && cpf.equals(conteudo)) {
+					String conteudo = lista[x][3];
+					if (y == 3 && cpf.equals(conteudo)) {
 						cpfValido = false;
 					}
 				}
@@ -2302,13 +2379,13 @@ public class exercicio51 {
 		for (int x = 0; x < tamanhoTotal; x++) {
 			for (int y = 0; y < camposLista; y++) {
 				if (editando && x != pos) {
-					String conteudo = lista[x][y];
-					if (y == 5 && rg.equals(conteudo)) {
+					String conteudo = lista[x][4];
+					if (y == 4 && rg.equals(conteudo)) {
 						rgValido = false;
 					}
 				} else {
-					String conteudo = lista[x][y];
-					if (y == 5 && rg.equals(conteudo)) {
+					String conteudo = lista[x][4];
+					if (y == 4 && rg.equals(conteudo)) {
 						rgValido = false;
 					}
 				}
@@ -2327,6 +2404,16 @@ public class exercicio51 {
 			i = verificarPosicaoLivre();
 			j = 0;
 			menuInicial.setVisible(false);
+			if (adicionandoTelefone) {
+				for (int x = 0; x < telefonesCadastrados.length; x++) {
+					String[] addTable = new String[2];
+					if (!telefonesCadastrados[x].equals(" ")) {
+						addTable[0] = String.valueOf(x + 1);
+						addTable[1] = telefonesCadastrados[x];
+						tel.addRow(addTable);
+					}
+				}
+			}
 		} else {
 			cdTelefone = contarTelefonesCliente(cdCliente) + 1;
 			carregarTelefonesCliente(cdCliente, tel);
